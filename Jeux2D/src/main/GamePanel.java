@@ -8,11 +8,14 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import entity.DynamicObstacle;
 import entity.Player;
 import tile.Obstacle;
 import tile.TileManager;
-
+import entity.Coeur;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Panel principal du jeu contenant la map principale
@@ -29,6 +32,11 @@ public class GamePanel extends JPanel implements Runnable {
     public final int SCREEN_WIDTH = TILE_SIZE * MAX_SCREEN_COL; // 768 pixels
     public final int SCREEN_HEIGHT = TILE_SIZE * MAX_SCREE_ROW; // 576 pixels
 
+    private final int HEART_SPACING = 10;
+    private final int HEART_START_X = 10;
+    private final int HEART_START_Y = 10;
+    private Coeur[] hearts;
+
     // FPS : taux de rafraichissement
     int m_FPS;
 
@@ -38,6 +46,8 @@ public class GamePanel extends JPanel implements Runnable {
     Player m_player;
     TileManager m_tileM;
 
+    //Liste d'obstacle dynamique
+    public List<DynamicObstacle> m_dynamicObstacles;
 
     // Image de fond
     BufferedImage backgroundImage;
@@ -50,6 +60,19 @@ public class GamePanel extends JPanel implements Runnable {
         m_keyH = new KeyHandler();
         m_tileM = new TileManager(this); // Initialisation de TileManager avant de créer le joueur
         m_player = new Player(this, m_keyH, m_tileM); // Passer la référence à TileManager
+// Initialisation de la liste des obstacles
+        m_dynamicObstacles = new ArrayList<>(); //initialiser les obstacles
+        //ajouter des obstacles
+        m_dynamicObstacles.add(new DynamicObstacle(this,m_tileM,100,300));
+        m_dynamicObstacles.add(new DynamicObstacle(this,m_tileM,400,300));
+
+        hearts = new Coeur[5];
+        int currentX = HEART_START_X;
+        int currentY = HEART_START_Y;
+        for (int i = 0; i < hearts.length; i++) {
+            hearts[i] = new Coeur(currentX, currentY);
+            currentX += Coeur.HEART_WIDTH + HEART_SPACING;
+        }
 
 
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -67,6 +90,30 @@ public class GamePanel extends JPanel implements Runnable {
     public TileManager getTileManager() {
         return m_tileM;
     }
+
+    // Méthode pour générer et mettre à jour les obstacles dynamiques
+//    public void updateObstacles() {
+//        // Nettoyer la liste des obstacles
+//        m_dynamicObstacles.clear();
+//
+//        // Générer les obstacles dynamiques sur les tuiles BRICK2
+//        for (int i = 0; i < m_tileM.m_mapTileNum.length; i++) {
+//            for (int j = 0; j < m_tileM.m_mapTileNum[0].length; j++) {
+//                if (m_tileM.m_mapTileNum[i][j] == 1) { // Vérifier si c'est une tuile BRICK2
+//                    int x = i * TILE_SIZE;
+//                    int y = j * TILE_SIZE;
+//                    DynamicObstacle obstacle = new DynamicObstacle(this, x, y, 4); // Créer un obstacle dynamique
+//                    m_dynamicObstacles.add(obstacle); // Ajouter l'obstacle à la liste
+//                }
+//            }
+//        }
+//
+//        // Mettre à jour la position des obstacles
+//        for (DynamicObstacle obstacle : m_dynamicObstacles) {
+//            obstacle.update();
+//        }
+//    }
+
     /**
      * Lancement du thread principal
      */
@@ -111,6 +158,9 @@ public class GamePanel extends JPanel implements Runnable {
      */
     public void update() {
         m_player.update();
+        for (DynamicObstacle dynamicObstacle : m_dynamicObstacles) {
+            dynamicObstacle.update();
+        }
 
     }
 
@@ -129,32 +179,17 @@ public class GamePanel extends JPanel implements Runnable {
 
         m_tileM.draw(g2);
         m_player.draw(g2);
-        // Générer et dessiner les obstacles dynamiques sur les tuiles BRICK2
-//        for (int i = 0; i < m_tileM.m_mapTileNum.length; i++) {
-//            for (int j = 0; j < m_tileM.m_mapTileNum[0].length; j++) {
-//                if (m_tileM.m_mapTileNum[i][j] == 1) { // Vérifier si c'est une tuile BRICK2
-//                    int x = i * TILE_SIZE;
-//                    int y = j * TILE_SIZE;
-//                    DynamicObstacle obstacle = new DynamicObstacle(this, x, y, 3); // Créer un obstacle dynamique
-//                    m_dynamicObstacles.add(obstacle); // Ajouter l'obstacle à la liste
-//                }
-//            }
-//        }
-//
-//        // Dessiner les obstacles dynamiques
-//        int obstacleCount=0;
-//        for (DynamicObstacle obstacle : m_dynamicObstacles) {
-//            if (obstacleCount < 3) { // Limiter à trois obstacles dessinés
-//                // Calculer les coordonnées de dessin en fonction des coordonnées de l'obstacle
-//                int obstacleX = obstacle.m_x * TILE_SIZE;
-//                int obstacleY = obstacle.m_y * TILE_SIZE;
-//                // Appeler la méthode draw avec les coordonnées de dessin calculées
-//                obstacle.draw(g2, obstacleX, obstacleY);
-//                obstacleCount++;
-//            } else {
-//                break; // Sortir de la boucle une fois que trois obstacles ont été dessinés
-//            }
-//        }
+
+        // Affichage des cœurs en fonction du nombre de vies du joueur
+        for (int i = 0; i < m_player.getLives(); i++) {
+            hearts[i].draw(g2);
+        }
+
+
+        for (DynamicObstacle dynamicObstacle : m_dynamicObstacles) {
+            dynamicObstacle.draw(g2);
+        }
+
 
         g2.dispose();
     }

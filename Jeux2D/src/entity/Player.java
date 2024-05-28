@@ -13,6 +13,7 @@ public class Player extends Entity {
     KeyHandler m_keyHandler;
     TileManager m_tileManager;
     BufferedImage m_playerImage;
+    private int lives =5;
 
     public Player(GamePanel gamePanel, KeyHandler keyHandler, TileManager tileManager) {
         this.m_gamePanel = gamePanel;
@@ -20,6 +21,7 @@ public class Player extends Entity {
         this.m_tileManager = tileManager;
         this.setDefaultValues();
         this.loadPlayerImage();
+        this.lives =5;
     }
 
     protected void setDefaultValues() {
@@ -78,7 +80,36 @@ public class Player extends Entity {
                 m_y = nextY;
             }
         }
+
+//        // Vérifier les collisions avec les obstacles dynamiques
+//        for (DynamicObstacle obstacle : m_gamePanel.m_dynamicObstacles) {
+//            if (collidesWith(obstacle)) {
+//                // Gérer la collision avec l'obstacle
+//                // Par exemple, réinitialiser la position du joueur
+//                setDefaultValues();
+//                break; // Sortir de la boucle dès qu'une collision est détectée
+//            }
+//        }
+
+        //joueur entre en collision avec un obstacle
+        for(DynamicObstacle obstacle : m_gamePanel.m_dynamicObstacles) {
+            if (collidesWith(obstacle)) {
+                setDefaultValues();
+                lives--;
+                break;
+            }
+        }
     }
+
+    public int getLives(){return lives;}
+    // Ajoutez cette méthode pour vérifier la collision avec un obstacle dynamique
+    private boolean collidesWith(DynamicObstacle obstacle) {
+        return m_x < obstacle.m_x + obstacle.m_width &&
+                m_x + m_width > obstacle.m_x &&
+                m_y < obstacle.m_y + obstacle.m_height &&
+                m_y + m_height > obstacle.m_y;
+    }
+
 
     public void draw(Graphics2D g) {
         g.drawImage(m_playerImage, m_x, m_y, m_gamePanel.TILE_SIZE, m_gamePanel.TILE_SIZE, null);
